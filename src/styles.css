@@ -1,0 +1,166 @@
+.App {
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  padding: 2rem;
+}
+
+/* Variables et couleurs */
+:root {
+  --cm-primary:   #84C598FF;
+  --cm-bg:        #FFF;
+  --cm-secondary: #D2D2D2FF;
+  --cm-accent:    #B973AFFF;
+  --cm-text:      #1a1a1a;
+}
+
+/* Fond général */
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--cm-bg);
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  color: var(--cm-text);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+/* Carte widget principale */
+.container, .info-widget {
+  max-width: 650px;
+  width: 94%;
+  margin: 24px auto;
+  padding: 24px 20px;
+  background: var(--cm-bg);
+  border: 1.5px solid var(--cm-primary);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+/* Titres principaux */
+.titre, .info-title {
+  font-size: 2rem;
+  color: var(--cm-accent);
+  margin-top: 1.2rem;
+  margin-bottom: 0.6rem;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+
+/* Sous-titres */
+h3, .info-widget h3 {
+  margin-top: 1.4rem;
+  color: var(--cm-primary);
+  font-size: 1.18rem;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.error, .warning {
+  color: #c62828;
+  margin-top: 1rem;
+}
+
+.result, .vat {
+  color: #319a5d;
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+/* Formulaire recherche */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7em;
+  margin-bottom: 1.4em;
+}
+.input {
+  width: 220px;
+  margin-right: 8px;
+  padding: 8px;
+  font-size: 1rem;
+  border: 1px solid var(--cm-secondary);
+  border-radius: 5px;
+}
+.btn {
+  padding: 8px 13px;
+  font-size: 1rem;
+  background-color: var(--cm-primary);
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn:hover {
+  background-color: var(--cm-accent);
+}
+
+/* Suggestions */
+.suggestions {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 1rem;
+  background: #f9f9f9;
+  border: 1px solid var(--cm-secondary);
+  border-radius: 7px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.suggestions li {
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.suggestions li:hover {
+  background: var(--cm-primary);
+  color: #fff;
+}
+
+.resultat, .etablissements ul, .info-widget ul {
+  list-style-type: disc;
+  padding-left: 22px;
+  margin: 0.3em 0 1em 0;
+}
+.resultat li, .etablissements li, .info-widget li {
+  margin-bottom: 5px;
+  font-size: 1rem;
+  color: var(--cm-text);
+}
+
+.etablissements h3, .info-widget h3 {
+  margin-top: 1.5rem;
+  color: var(--cm-accent);
+}
+
+/* Liste imbriquée (widget fiche entreprise) */
+.info-widget ul ul, .results ul ul, .etablissements ul ul {
+  padding-left: 18px;
+  border-left: 1.5px solid var(--cm-secondary);
+  margin-bottom: 0.2em;
+}
+.info-widget li strong, .results li strong {
+  color: var(--cm-accent);
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .titre, .info-title {
+    font-size: 1.2rem;
+  }
+  .container, .info-widget {
+    padding: 12px;
+  }
+  .input, .btn, .resultat li, .info-widget li {
+    font-size: 0.95rem;
+  }
+}
+
+/* Footer widget */
+.info-footer {
+  font-size: 0.92rem;
+  margin-top: 1.5rem;
+  padding-top: 10px;
+  border-top: 1px solid var(--cm-secondary);
+  opacity: 0.7;
+}

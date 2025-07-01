@@ -1,0 +1,23 @@
+# Siren Search Widget – SIRENE + INPI fallback
+
+Ce widget React permet de rechercher une entreprise par SIREN/SIRET/nom :  
+- Affiche toutes les infos SIRENE
+- Complète automatiquement les champs “non renseignés” grâce à un backend proxy INPI
+- Affichage dynamique de l’activité principale et de la forme juridique (nomenclatures locales)
+
+## Pour lancer le projet
+
+```bash
+npm install
+npm run dev
+```
+
+## Configuration
+
+- Remplissez les fichiers `naf.json` et `formeJuridique.json` avec les nomenclatures à jour.
+- Le backend INPI doit être accessible sur `/inpi/entreprise/:siren` (adapter l’URL dans `App.tsx` sinon).
+- Clé API SIRENE à modifier dans `App.tsx` (`API_KEY`).
+
+## Backend INPI
+
+Voir la section précédente pour le backend Express à déployer.
