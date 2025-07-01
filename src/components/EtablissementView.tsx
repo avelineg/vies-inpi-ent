@@ -1,32 +1,7 @@
 import React from "react";
 import CarteAdresse from "./CarteAdresse";
 
-type Etab = {
-  siret: string;
-  denomination: string;
-  adresse: string;
-  code_ape: string;
-  libelle_ape: string;
-  forme_juridique: string;
-  date_creation: string;
-  unite_legale: {
-    siren: string;
-    denomination: string;
-    forme_juridique: string;
-  };
-  etablissements_secondaires: {
-    siret: string;
-    denomination: string;
-    adresse: string;
-  }[];
-  representants?: {
-    nom: string; prenom: string; qualite?: string;
-  }[];
-  geo?: { lat: number; lon: number };
-  tva?: { numero: string; valide: boolean };
-};
-
-export default function EtablissementView({ etab }: { etab: Etab }) {
+export default function EtablissementView({ etab }: { etab: any }) {
   return (
     <div className="etab-card info-widget">
       <header>
@@ -64,10 +39,32 @@ export default function EtablissementView({ etab }: { etab: Etab }) {
         <>
           <h2>Représentants</h2>
           <ul>
-            {etab.representants.map((r, i) => (
+            {etab.representants.map((r: any, i: number) => (
               <li key={i}>
                 {r.nom} {r.prenom} {r.qualite ? `— ${r.qualite}` : ""}
               </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {etab.formalites && etab.formalites.length > 0 && (
+        <>
+          <h2>Formalités récentes</h2>
+          <ul>
+            {etab.formalites.map((f: any, i: number) => (
+              <li key={i}>
+                {f.type} – {f.date} {f.description ? `: ${f.description}` : ""}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {etab.historique && etab.historique.length > 0 && (
+        <>
+          <h2>Historique</h2>
+          <ul>
+            {etab.historique.map((h: any, i: number) => (
+              <li key={i}>{h}</li>
             ))}
           </ul>
         </>
@@ -76,7 +73,7 @@ export default function EtablissementView({ etab }: { etab: Etab }) {
         <>
           <h2>Autres établissements</h2>
           <ul>
-            {etab.etablissements_secondaires.map(e => (
+            {etab.etablissements_secondaires.map((e: any) => (
               <li key={e.siret}>
                 <a
                   href={`https://annuaire-entreprises.data.gouv.fr/etablissement/${e.siret}`}
