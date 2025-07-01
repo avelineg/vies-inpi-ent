@@ -1,14 +1,11 @@
 import axios from "axios";
 
-// APIs (adapter les URLs si besoin)
-const API_SIRENE = "https://api.insee.fr/entreprises/sirene/V3.11";
+// API Sirene v3 - URL conforme doc INSEE
+const API_SIRENE = "https://api.insee.fr/api-sirene/3.11";
 const API_GEO = "https://api-adresse.data.gouv.fr/search/";
-const API_INPI = import.meta.env.VITE_API_URL + "/inpi/entreprise/"; // backend proxy INPI attendu
-const API_VIES = import.meta.env.VITE_VAT_API_URL + "/check-vat";    // backend proxy VIES attendu
+const API_INPI = import.meta.env.VITE_API_URL + "/inpi/entreprise/";
+const API_VIES = import.meta.env.VITE_VAT_API_URL + "/check-vat";
 
-/**
- * Récupère et normalise les données pour l'affichage à la Annuaire-Entreprises.
- */
 export async function fetchEtablissementData(siretOrSiren: string) {
   let etab, uniteLegale, secondaires, geo, tvaInfo, inpiInfo;
   let siret = siretOrSiren, siren = "";
@@ -17,22 +14,27 @@ export async function fetchEtablissementData(siretOrSiren: string) {
 
   // 1. Recherche SIRENE
   if (/^\d{14}$/.test(siretOrSiren)) {
-    const { data } = await axios.get(`${API_SIRENE}/siret/${siretOrSiren}`, {
-      headers: { Authorization: `Bearer ${SIRENE_API_KEY}` }
-    });
+    const { data } = await axios.get(
+      `${API_SIRENE}/siret/${siretOrSiren}`,
+      { headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY } }
+    );
     etab = data.etablissement;
     siren = etab.siren;
   } else if (/^\d{9}$/.test(siretOrSiren)) {
-    const { data } = await axios.get(`${API_SIRENE}/siren/${siretOrSiren}`, {
-      headers: { Authorization: `Bearer ${SIRENE_API_KEY}` }
-    });
+    const { data } = await axios.get(
+      `${API_SIRENE}/siren/${siretOrSiren}`,
+      { headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY } }
+    );
     uniteLegale = data.uniteLegale;
     siren = uniteLegale.siren;
     // On va chercher l’établissement principal
-    const { data: dataEtab } = await axios.get(`${API_SIRENE}/siren/${siren}/etablissements`, {
-      headers: { Authorization: `Bearer ${SIRENE_API_KEY}` },
-      params: { etatAdministratifEtablissement: "A", limit: 1 }
-    });
+    const { data: dataEtab } = await axios.get(
+      `${API_SIRENE}/siren/${siren}/etablissements`,
+      {
+        headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY },
+        params: { etatAdministratifEtablissement: "A", limit: 1 }
+      }
+    );
     etab = dataEtab.etablissements[0];
   } else {
     throw new Error("Merci de fournir un SIRET ou SIREN valide.");
@@ -40,17 +42,21 @@ export async function fetchEtablissementData(siretOrSiren: string) {
 
   // 2. Unité légale si manquante
   if (!uniteLegale) {
-    const { data } = await axios.get(`${API_SIRENE}/siren/${siren}`, {
-      headers: { Authorization: `Bearer ${SIRENE_API_KEY}` }
-    });
+    const { data } = await axios.get(
+      `${API_SIRENE}/siren/${siren}`,
+      { headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY } }
+    );
     uniteLegale = data.uniteLegale;
   }
 
-  // 3. Établissements secondaires (autres que le principal)
-  const { data: dataSec } = await axios.get(`${API_SIRENE}/siren/${siren}/etablissements`, {
-    headers: { Authorization: `Bearer ${SIRENE_API_KEY}` },
-    params: { etatAdministratifEtablissement: "A", limit: 20 }
-  });
+  // 3. Établissements secondaires
+  const { data: dataSec } = await axios.get(
+    `${API_SIRENE}/siren/${siren}/etablissements`,
+    {
+      headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY },
+      params: { etatAdministratifEtablissement: "A", limit: 20 }
+    }
+  );
   secondaires = (dataSec.etablissements || [])
     .filter((e: any) => e.siret !== etab.siret)
     .map((e: any) => ({
@@ -117,7 +123,6 @@ export async function fetchEtablissementData(siretOrSiren: string) {
     inpiInfo = { dirigeants: [], formalites: [], historique: [] };
   }
 
-  // 7. Mapping final pour EtablissementView
   return {
     siret: etab.siret,
     denomination: etab.denominationEtablissement || uniteLegale.denominationUniteLegale,
