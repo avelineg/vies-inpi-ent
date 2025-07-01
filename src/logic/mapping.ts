@@ -1,32 +1,28 @@
 import axios from "axios";
 
-// API endpoints
 const API_SIRENE = "https://api.insee.fr/api-sirene/3.11";
 const API_GEO = "https://api-adresse.data.gouv.fr/search/";
 const API_INPI = import.meta.env.VITE_API_URL + "/inpi/entreprise/";
 const API_VIES = import.meta.env.VITE_VAT_API_URL + "/check-vat";
 
-/**
- * Fonction principale pour récupérer toutes les informations de l'entreprise.
- * @param siretOrSiren SIRET (14 chiffres) ou SIREN (9 chiffres)
- */
 export async function fetchEtablissementData(siretOrSiren: string) {
-  let etab, uniteLegale, secondaires, geo, tvaInfo, inpiInfo;
+  let etab = null, uniteLegale = null, secondaires = [], geo = null, tvaInfo = null, inpiInfo = {};
   let siret = siretOrSiren, siren = "";
 
   const SIRENE_API_KEY = import.meta.env.VITE_SIRENE_API_KEY;
 
-  // Recherche principale selon le format
+  // Recherche SIRET ou SIREN selon format
   if (/^\d{14}$/.test(siretOrSiren)) {
     // Recherche établissement par SIRET
     try {
       const { data } = await axios.get(
-        `${API_SIRENE}/etablissement/${siretOrSiren}`,
+        `${API_SIRENE}/etablissements`,
         {
-          headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY }
+          headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY },
+          params: { siret: siretOrSiren }
         }
       );
-      etab = data.etablissement;
+      etab = data.etablissements?.[0] || null;
       if (!etab) throw new Error("Aucun établissement trouvé pour ce SIRET.");
       siren = etab.siren;
     } catch (error: any) {
@@ -39,16 +35,17 @@ export async function fetchEtablissementData(siretOrSiren: string) {
     // Recherche unité légale par SIREN
     try {
       const { data } = await axios.get(
-        `${API_SIRENE}/unite_legale/${siretOrSiren}`,
+        `${API_SIRENE}/unites_legales`,
         {
-          headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY }
+          headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY },
+          params: { siren: siretOrSiren }
         }
       );
-      uniteLegale = data.uniteLegale;
+      uniteLegale = data.unites_legales?.[0] || null;
       if (!uniteLegale) throw new Error("Aucune unité légale trouvée pour ce SIREN.");
       siren = uniteLegale.siren;
 
-      // Recherche l’établissement principal du SIREN
+      // Recherche l’établissement principal
       const { data: dataEtab } = await axios.get(
         `${API_SIRENE}/etablissements`,
         {
@@ -61,7 +58,7 @@ export async function fetchEtablissementData(siretOrSiren: string) {
           }
         }
       );
-      etab = (dataEtab.etablissements && dataEtab.etablissements[0]) || null;
+      etab = dataEtab.etablissements?.[0] || null;
       if (!etab) throw new Error("Aucun établissement principal trouvé pour ce SIREN.");
     } catch (error: any) {
       if (error.response && error.response.status === 404) {
@@ -73,16 +70,17 @@ export async function fetchEtablissementData(siretOrSiren: string) {
     throw new Error("Merci de fournir un SIRET ou SIREN valide.");
   }
 
-  // Recherche unité légale si manquante (pour la recherche SIRET)
+  // Si on a l'établissement, on récupère l'unité légale associée si besoin
   if (!uniteLegale && siren) {
     try {
       const { data } = await axios.get(
-        `${API_SIRENE}/unite_legale/${siren}`,
+        `${API_SIRENE}/unites_legales`,
         {
-          headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY }
+          headers: { "X-INSEE-Api-Key-Integration": SIRENE_API_KEY },
+          params: { siren }
         }
       );
-      uniteLegale = data.uniteLegale;
+      uniteLegale = data.unites_legales?.[0] || null;
       if (!uniteLegale) throw new Error("Unité légale absente.");
     } catch (error: any) {
       if (error.response && error.response.status === 404) {
@@ -92,8 +90,7 @@ export async function fetchEtablissementData(siretOrSiren: string) {
     }
   }
 
-  // Recherche établissements secondaires (secondaires = typeEtablissement: "S")
-  secondaires = [];
+  // Recherche établissements secondaires
   if (siren) {
     try {
       const { data: dataSec } = await axios.get(
@@ -120,8 +117,7 @@ export async function fetchEtablissementData(siretOrSiren: string) {
           e.libelleCommuneEtablissement
         ].filter(Boolean).join(" ")
       }));
-    } catch (error: any) {
-      // Si 404, il n'y a juste pas de secondaires, pas d'erreur bloquante
+    } catch {
       secondaires = [];
     }
   }
@@ -145,7 +141,7 @@ export async function fetchEtablissementData(siretOrSiren: string) {
           lat: geoData.features[0].geometry.coordinates[1]
         };
       }
-    } catch (e) { /* ignore géocodage si erreur */ }
+    } catch { /* ignore géocodage si erreur */ }
   }
 
   // Numéro TVA (VIES)
@@ -155,7 +151,7 @@ export async function fetchEtablissementData(siretOrSiren: string) {
     try {
       const { data: vies } = await axios.get(`${API_VIES}?countryCode=FR&vatNumber=${tvaNum.slice(2)}`);
       tvaInfo = { numero: tvaNum, valide: vies.valid };
-    } catch (e) {
+    } catch {
       tvaInfo = { numero: tvaNum, valide: null };
     }
   }
@@ -173,7 +169,7 @@ export async function fetchEtablissementData(siretOrSiren: string) {
       formalites: inpi.formalites || [],
       historique: inpi.historique || []
     };
-  } catch (e) {
+  } catch {
     inpiInfo = { dirigeants: [], formalites: [], historique: [] };
   }
 
