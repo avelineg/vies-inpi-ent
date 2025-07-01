@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import "./styles.css";
 import EtablissementView from "./components/EtablissementView";
 import { fetchEtablissementData } from "./logic/mapping";
-import "leaflet/dist/leaflet.css";
 
-// ...tu peux garder ta barre de recherche existante ou la simplifier :
 export default function App() {
   const [input, setInput] = useState("");
   const [etabData, setEtabData] = useState<any | null>(null);
